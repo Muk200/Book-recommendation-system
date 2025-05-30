@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Book Recommender</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@3.3.7/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .text-white {
+            color: white;
+        }
+        .suggestion {
+            cursor: pointer;
+            background-color: gray;
+            padding: 5px;
+        }
+        .suggestion:hover {
+            background-color: darkgray;
+        }
+
+        .navbar-nav > li > a:hover,
+        .navbar-nav > li.active > a:hover {
+            background-color: gray !important;
+            color: white !important;
+            text-decoration: none !important;
+        }
+    </style>
+</head>
+<body style="background-color: black">
+
+<nav class="navbar" style="background-color: purple">
+    <a class="navbar-brand">My Book Recommender</a>
+    <ul class="nav navbar-nav">
+        <li><a href="/">Home</a></li>
+        <li><a href="/recommend">Recommend</a></li>
+        <li><a href="/chatbot">Chatbot</a></li>
+    </ul>
+</nav>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="text-white" style="font-size: 50px">Recommend Books</h1>
+            <form action="/recommend_books" method="post">
+                <input id="user_input" name="user_input" type="text" class="form-control" placeholder="Enter book title" autocomplete="off"><br>
+                <div id="suggestions"></div>
+                <input type="submit" class="btn btn-lg btn-warning">
+            </form>
+        </div>
+
+        {% if error %}
+        <div class="col-md-12">
+            <p class="text-white" style="margin-top: 20px;">{{ error }}</p>
+        </div>
+        {% endif %}
+
+        {% if data %}
+        {% for i in data %}
+        <div class="col-md-3" style="margin-top: 50px">
+            <div class="card">
+                <div class="card-body">
+                    <img class="card-img-top" src="{{ i[2] }}">
+                    <p class="text-white">{{ i[0] }}</p>
+                    <h4 class="text-white">{{ i[1] }}</h4>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Listen for input changes to trigger autocomplete
+        $('#user_input').on('input', function() {
+            let query = $(this).val();
+
+            if (query.length > 2) {
+                // Make AJAX request to get book title suggestions
+                $.get('/autocomplete', { query: query }, function(data) {
+                    let suggestions = $('#suggestions');
+                    suggestions.empty();  // Clear previous suggestions
+                    if (data.length > 0) {
+                        data.forEach(function(suggestion) {
+                            suggestions.append('<div class="suggestion">' + suggestion + '</div>');
+                        });
+                    }
+                });
+            } else {
+                $('#suggestions').empty();  // Clear suggestions when input is short
+            }
+        });
+
+        // When a suggestion is clicked, fill the input field
+        $(document).on('click', '.suggestion', function() {
+            $('#user_input').val($(this).text());
+            $('#suggestions').empty();  // Clear suggestions after selection
+        });
+    });
+</script>
+
+</body>
+</html>

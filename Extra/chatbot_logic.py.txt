@@ -1,0 +1,18 @@
+chatbot_logic.py
+
+
+# chatbot_logic.py
+
+def get_chatbot_response(user_input):
+    user_input = user_input.lower()
+
+    if "recommend" in user_input:
+        return "You can use the 'Recommend' tab above to get personalized book suggestions!"
+    elif "hello" in user_input or "hi" in user_input:
+        return "Hi there! How can I assist you today?"
+    elif "author" in user_input:
+        return "Do you have a favorite author? I can find books by them!"
+    elif "thank" in user_input:
+        return "You're welcome! 😊"
+    else:
+        return "Sorry, I didn't understand that. Try asking about books, authors, or recommendations."
