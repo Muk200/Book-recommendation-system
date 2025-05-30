@@ -1,0 +1,60 @@
+import pandas as pd
+import difflib  #comparing strings or lists. can find similarities between sequences
+
+
+books = pd.read_pickle(open('model/books.pkl', 'rb'))
+
+# a dictionary of normalized author names
+all_authors = books['Book-Author'].dropna().unique()
+normalized_authors = {author.lower().strip(): author for author in all_authors}
+
+
+def get_chatbot_response(user_input):
+    user_input_clean = user_input.strip().lower()
+
+    # Common
+    if "hello" in user_input_clean or "hi" in user_input_clean:
+        return "Hi there! How can I assist you today?"
+    elif "thank" in user_input_clean:
+        return "You're welcome! 😊"
+    elif "author" in user_input_clean and "recommend" not in user_input_clean:
+        return "Do you have a favorite author? I can find books by them!"
+
+    # Detect phrases or name
+    keywords = ['book by', 'books by', 'recommend books by']
+    is_author_request = any(kw in user_input_clean for kw in keywords)
+
+    # If there is a keyword phrase, isolate it
+    for kw in keywords:
+        if kw in user_input_clean:
+            user_input_clean = user_input_clean.replace(kw, '').strip()
+
+    # fuzzy logic(approximate rather than fixed)
+    possible_match = difflib.get_close_matches(user_input_clean, normalized_authors.keys(), n=1, cutoff=0.6)
+
+    if possible_match:
+        matched_author_key = possible_match[0]
+        actual_author = normalized_authors[matched_author_key]
+        matched_books = books[books['Book-Author'].str.lower().str.strip() == matched_author_key]
+
+        if not matched_books.empty:
+            response = f"📚 Books by {actual_author}:\n"
+            for title in matched_books['Book-Title'].drop_duplicates().head(10):
+                response += f"• {title}\n"
+            return response.strip()
+
+    #an author name
+
+    possible_author_only = difflib.get_close_matches(user_input_clean, normalized_authors.keys(), n=1, cutoff=0.6)
+    if possible_author_only:
+        matched_author_key = possible_author_only[0]
+        actual_author = normalized_authors[matched_author_key]
+        matched_books = books[books['Book-Author'].str.lower().str.strip() == matched_author_key]
+
+        if not matched_books.empty:
+            response = f"📚 Books by {actual_author}:\n"
+            for title in matched_books['Book-Title'].drop_duplicates().head(10):
+                response += f"• {title}\n"
+            return response.strip()
+
+    return "❗Sorry, I couldn't find any books by that author. Please check the spelling or try again."
